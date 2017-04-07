@@ -30,7 +30,7 @@ if ( ! function_exists( 'ucf_scheduler_plugin_activated' ) ) {
 	 * @since 1.0.0
 	 **/
 	function ucf_scheduler_plugin_activated() {
-		return;
+		UCF_Scheduler_Options::add_options();
 	}
 
 	register_activation_hook( UCF_SCHEDULER__PLUGIN_FILE, 'ucf_scheduler_plugin_activated' );
@@ -43,7 +43,7 @@ if ( ! function_exists( 'ucf_scheduler_plugin_deactivated' ) ) {
 	 * @since 1.0.0
 	 **/
 	function ucf_scheduler_plugin_deactivated() {
-		return;
+		UCF_Scheduler_Options::delete_options();
 	}
 
 	register_deactivation_hook( UCF_SCHEDULER__PLUGIN_FILE, 'ucf_scheduler_plugin_deactivated' );
