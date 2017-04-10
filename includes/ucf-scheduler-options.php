@@ -7,7 +7,7 @@ if ( ! class_exists( 'UCF_Scheduler_Options' ) ) {
 		public static
 			$option_prefix = 'ucf_scheduler_',
 			$option_defaults = array(
-				'enabled_posts' => array(
+				'enabled_post_types' => array(
 					'post' => 'on',
 					'page' => 'on'
 				)

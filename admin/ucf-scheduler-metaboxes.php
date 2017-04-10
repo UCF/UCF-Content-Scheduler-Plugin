@@ -33,15 +33,18 @@
 		public static function schedule_metabox_markup() {
 			global $post;
 			wp_nonce_field( 'ucf_scheduler_metabox', 'ucf_scheduler_metabox_nonce' );
-
+			
             $start = get_post_meta( $post->ID, 'ucf_scheduler_start_datetime', true );
-            
+            $end = get_post_meta( $post->ID, 'ucf_scheduler_end_datetime', true );
+
             if ( $start ) {
+				$start = new DateTime( $start );
                 $start_date = $start->format( 'Y-m-d' );
                 $start_time = $start->format( 'H:i' );
             }
 
             if ( $end ) {
+				$end = new DateTime( $end );
                 $end_date = $end->format( 'Y-m-d' );
                 $end_time = $end->format( 'H:i' );
             }
@@ -53,6 +56,7 @@
 
             if ( in_array( $post->post_status, $scheduled_statuses ) ) :
         ?>
+			<style> #duplicate-action, #delete-action, #minor-publishing-actions, #misc-publishing-actions, #preview-action {display:none;} </style>
             <fieldset>
                 <div>
                     <label for="ucf_scheduler_start_date">Start Date and Time: </label>
@@ -69,8 +73,11 @@
                 <button id="ucf_scheduler_update_now" type="button" class="submitscheduler scheduler button button-warning button-large pull-right" style="display: <?php echo $display; ?>; margin: 8px;">Update Immediately</a>
             </fieldset>
         <?php else : ?>
-		    <button id="ucf_scheduler_create_update" type="button" class="submitscheduler scheduler button button-large pull-right" style="margin: 8px;">Create Scheduled Update</a>
+		    <button id="ucf_scheduler_create_update" type="button" class="submitscheduler scheduler button button-large pull-right" style="margin: 8px;">Create Scheduled Update</button>
         <?php endif;
+		?>
+			<div class="clear"></div>
+		<?php
 		}
      }
  }

@@ -16,12 +16,14 @@ define( 'UCF_SCHEDULER__PLUGIN_URL', plugins_url( basename( dirname( __FILE__ ) 
 define( 'UCF_SCHEDULER__STATIC_URL', UCF_SCHEDULER__PLUGIN_URL . '/static' );
 define( 'UCF_SCHEDULER__SCRIPT_URL', UCF_SCHEDULER__STATIC_URL . '/js' );
 
+include_once 'includes/ucf-scheduler-logger.php';
 include_once 'includes/ucf-scheduler-options.php';
 include_once 'includes/ucf-scheduler-statuses.php';
 include_once 'includes/class-ucf-schedule.php';
 include_once 'admin/ucf-scheduler-admin.php';
 include_once 'admin/ucf-scheduler-metaboxes.php';
 include_once 'admin/ucf-scheduler-ajax.php';
+include_once 'admin/ucf-scheduler-cron.php';
 
 if ( ! function_exists( 'ucf_scheduler_plugin_activated' ) ) {
 	/**
@@ -44,6 +46,7 @@ if ( ! function_exists( 'ucf_scheduler_plugin_deactivated' ) ) {
 	 **/
 	function ucf_scheduler_plugin_deactivated() {
 		UCF_Scheduler_Options::delete_options();
+		UCF_Scheduler_Cron::delete_cron();
 	}
 
 	register_deactivation_hook( UCF_SCHEDULER__PLUGIN_FILE, 'ucf_scheduler_plugin_deactivated' );
@@ -59,6 +62,15 @@ if ( ! function_exists( 'ucf_scheduler_init' ) ) {
 	 * @since 1.0.0
 	 **/
 	function ucf_scheduler_init() {
+		/**
+		 * Filters
+		 **/
+		// Add `Every Five Minutes` schedule to WP_Cron
+		add_filter( 'cron_schedules', array( 'UCF_Scheduler_Cron', 'register_interval' ), 10, 1 );
+
+		/**
+		 * Action Hooks
+		 **/
 		// Initiate the Plugin Settings
 		add_action( 'admin_init', array( 'UCF_Scheduler_Options', 'settings_init' ) );
 		// Add the options page.
@@ -77,6 +89,12 @@ if ( ! function_exists( 'ucf_scheduler_init' ) ) {
 		add_action( 'wp_ajax_update_schedule', array( 'UCF_Scheduler_Ajax', 'update_schedule_admin_action' ), 10, 0 );
 		// Add `update_original` admin action
 		add_action( 'wp_ajax_update_now', array( 'UCF_Scheduler_Ajax', 'update_original_admin_action' ), 10, 0 );
+		// Prevent publish on scheduled posts
+		add_action( 'transition_post_status', array( 'UCF_Scheduler_Admin', 'prevent_publish' ), 10, 3 );
+		// Adds the cron if it does not exist.
+		add_action( 'init', array( 'UCF_Scheduler_Cron', 'add_cron' ), 10, 0 );
+		// The action the cron initiates
+		add_action( 'ucf_scheduler_cron', array( 'UCF_Scheduler_Cron', 'init' ), 10, 0 );
 	}
 
 	add_action( 'plugins_loaded', 'ucf_scheduler_init', 10, 0 );

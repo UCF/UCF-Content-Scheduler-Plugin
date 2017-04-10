@@ -71,7 +71,7 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
             $metadata = $this->format_schedule( $schedule );
             $this->update_metadata( $this->shadow['ID'], $metadata );
             $this->shadow['post_status'] = 'update_scheduled';
-            wp_update_post( $this->shadow );
+           	wp_update_post( $this->shadow );
         }
 
         /**
@@ -84,6 +84,8 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
          * @return int | The ID of the original post.
          **/
         public function update_original_post( $delete_update=False ) {
+			$shadow_id = $this->shadow['ID'];
+
             $this->shadow['ID'] = $this->original['ID'];
             $this->shadow['post_parent'] = $this->original['post_parent'];
             $this->shadow['post_name'] = $this->original['post_name'];
@@ -91,9 +93,22 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 
             $retval = wp_update_post( $this->shadow );
 
-            if ( $delete_update ) {
-                wp_delete_post( $shadow );
-            }
+			$end_date = get_post_meta( $shadow_id, 'ucf_scheduler_end_datetime', True );
+
+			if ( ! $end_date ) {
+				wp_delete_post( $shadow_id );
+			} else {
+				$end_date = new DateTime( $end_date );
+				$this->original['post_parent'] = $retval;
+				$schedule = new UCF_Schedule( $this->original );
+				$schedule->create_shadow_post();
+				$start_date = array(
+					'start_date' => $end_date->format( 'Y-m-d' ),
+					'start_time' => $end_date->format( 'H:i:s' )
+				);
+
+				$schedule->update_schedule( $start_date );
+			}
 
             return $retval;
         }
@@ -110,16 +125,23 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
         private function format_schedule( $schedule ) {
             $start_date = $schedule['start_date'];
             $start_time = isset( $schedule['start_time'] ) ? $schedule['start_time'] : '00:00';
+
+			$start_date_time = new DateTime( $start_date . ' ' . $start_time );
+
             $end_date = isset( $schedule['end_date'] ) ? $schedule['end_date'] : null;
             $end_time = isset( $schedule['end_time'] ) ? $schedule['end_time'] : '00:00';
 
             $retval = array(
-                'ucf_scheduler_start_datetime' => new DateTime( $start_date . ' ' . $start_time )
+                'ucf_scheduler_start_datetime' => $start_date_time->format( 'Y-m-d H:i:s' )
             );
 
             if ( $end_date ) {
-                $retval['ucf_scheduler_end_datetime'] = new DateTime( $end_date . ' ' , $end_time );
-            }
+				$end_date_time = new DateTime( $end_date . ' ' . $end_time );
+
+                $retval['ucf_scheduler_end_datetime'] = $end_date_time->format( 'Y-m-d H:i:s' );
+            } else {
+				$retval['ucf_scheduler_end_datetime'] = null;
+			}
 
             return $retval;
         }

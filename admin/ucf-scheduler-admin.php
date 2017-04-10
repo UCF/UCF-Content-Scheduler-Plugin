@@ -42,5 +42,33 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 
 				 return $where;
 		}
+
+		/**
+		 * Hook that supports workflow by preventing scheduled
+		 * posts from being published outside of the cron job.
+		 * @author Jim Barnes
+		 * @since 1.0.0
+		 * 
+		 * @param $new_status string | The new status of the post
+		 * @param $old_status string | The old status of the post
+		 * @param $post WP_Post object | The post object.
+		 **/
+		public static function prevent_publish( $new_status, $old_status, $post ) {
+			$statuses = array(
+				'pending_scheduled',
+				'update_scheduled'
+			);
+
+			if ( $new_status === $old_status && in_array( $new_status, $statuses ) ) {
+				return;
+			}
+
+			if ( $old_status === 'pending_scheduled' && $new_status === 'update_scheduled' ) {
+				$post->post_status = $new_status;
+			} else if ( in_array( $old_status, $statuses ) && 'publish' === $new_status ) {
+				$post->post_status = $old_status;
+				$post_id = wp_update_post( $post, false );
+			}
+		}
     }
 }
