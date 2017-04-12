@@ -66,13 +66,43 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
          * @since 1.0.0
          * 
          * @param $schedule Array | An array of the start and end dates and times
+		 * @return int|WP_Error | Returns $post_id if update was successful, WP_Error if not.
          **/
         public function update_schedule( $schedule ) {
             $metadata = $this->format_schedule( $schedule );
-            $this->update_metadata( $this->shadow['ID'], $metadata );
-            $this->shadow['post_status'] = 'update_scheduled';
-           	wp_update_post( $this->shadow );
+
+			if ( $this->verify_unique_schedule( $metadata ) ) {
+				$this->update_metadata( $this->shadow['ID'], $metadata );
+				$this->shadow['post_status'] = 'update_scheduled';
+				$retval = wp_update_post( $this->shadow );
+			} else {
+				$retval = new WP_Error(
+					"not-unique-schedule",
+					__( 'The provided schedule overlaps with an already scheduled update for this post.', 'ucf_scheduler' )
+				);
+			}
+
+			return $retval;
         }
+
+		/**
+		 * Removes the schedule and reverts the post_status
+		 * 
+		 * @author Jim Barnes
+		 * @since 1.0.0
+		 **/
+		public function remove_schedule() {
+			$retval = $this->shadow['ID'];
+
+			if ( $this->shadow['post_status'] === 'update_scheduled' ) {
+				delete_post_meta( $this->shadow['ID'], 'ucf_scheduler_start_datetime' );
+				delete_post_meta( $this->shadow['ID'], 'ucf_scheduler_end_datetime' );
+				$this->shadow['post_status'] = 'pending_scheduled';
+				$retval = wp_update_post( $this->shadow );
+			}
+
+			return $retval;
+		}
 
         /**
          * Updates the original post with the content from the shadow
@@ -85,6 +115,22 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
          **/
         public function update_original_post( $delete_update=False ) {
 			$shadow_id = $this->shadow['ID'];
+			$original = $this->original;
+
+			$end_date = get_post_meta( $shadow_id, 'ucf_scheduler_end_datetime', True );
+
+			if ( $end_date ) {
+				$end_date = new DateTime( $end_date );
+				$original['post_parent'] = $retval;
+				$schedule = new UCF_Schedule( $original );
+				$schedule->create_shadow_post();
+				$start_date = array(
+					'start_date' => $end_date->format( 'Y-m-d' ),
+					'start_time' => $end_date->format( 'H:i:s' )
+				);
+
+				$schedule->update_schedule( $start_date );
+			}
 
             $this->shadow['ID'] = $this->original['ID'];
             $this->shadow['post_parent'] = $this->original['post_parent'];
@@ -93,21 +139,8 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 
             $retval = wp_update_post( $this->shadow );
 
-			$end_date = get_post_meta( $shadow_id, 'ucf_scheduler_end_datetime', True );
-
 			if ( ! $end_date ) {
 				wp_delete_post( $shadow_id );
-			} else {
-				$end_date = new DateTime( $end_date );
-				$this->original['post_parent'] = $retval;
-				$schedule = new UCF_Schedule( $this->original );
-				$schedule->create_shadow_post();
-				$start_date = array(
-					'start_date' => $end_date->format( 'Y-m-d' ),
-					'start_time' => $end_date->format( 'H:i:s' )
-				);
-
-				$schedule->update_schedule( $start_date );
 			}
 
             return $retval;
@@ -189,5 +222,40 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
                 }
             }
         }
+
+		private function verify_unique_schedule( $schedule ) {
+			$post_parent = $this->original['ID'];
+
+			$args = array(
+				'post_type'      => $this->original['post_type'],
+				'post_parent'    => $post_parent,
+				'post_status'    => 'update_scheduled',
+				'posts_per_page' => -1,
+				'post__not_in'   => array( $this->shadow['ID'] ),
+				'meta_query'     => array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'ucf_scheduler_start_datetime',
+						'value'   => $schedule['ucf_scheduler_start_datetime'],
+						'compare' => '<=',
+						'type'    => 'DATETIME'
+					),
+					array(
+						'key'     => 'ucf_scheduler_end_datetime',
+						'value'   => $schedule['ucf_scheduler_end_datetime'],
+						'compare' => '>=',
+						'type'    => 'DATETIME'
+					)
+				)
+			);
+
+			$count = count( get_posts( $args ) );
+
+			if ( $count > 0 ) {
+				return false;
+			}
+
+			return true;
+		}
     }
 }

@@ -33,30 +33,30 @@ if ( ! class_exists( 'UCF_Scheduler_Ajax' ) ) {
 			wp_send_json( $response );
 		}
 
-        /**
-         * Handles updating the scheduling information
-         *
-         * @author Jim Barnes
-         * @since 1.0.0
-         **/
-        public static function update_schedule_admin_action() {
-            $post_id = (int) $_POST['post_id'];
-            $schedule_array = array(
-                'start_date' => $_POST['start_date'],
-                'start_time' => $_POST['start_time'],
-                'end_date'   => $_POST['end_date'],
-                'end_time'   => $_POST['end_time']
-            );
+        // /**
+        //  * Handles updating the scheduling information
+        //  *
+        //  * @author Jim Barnes
+        //  * @since 1.0.0
+        //  **/
+        // public static function update_schedule_admin_action() {
+        //     $post_id = (int) $_POST['post_id'];
+        //     $schedule_array = array(
+        //         'start_date' => $_POST['start_date'],
+        //         'start_time' => $_POST['start_time'],
+        //         'end_date'   => $_POST['end_date'],
+        //         'end_time'   => $_POST['end_time']
+        //     );
 
-            $schedule = new UCF_Schedule( $post_id );
-            $schedule->update_schedule( $schedule_array );
+        //     $schedule = new UCF_Schedule( $post_id );
+        //     $schedule->update_schedule( $schedule_array );
 
-            $response = array(
-                'status' => 'Success'
-            );
+        //     $response = array(
+        //         'status' => 'Success'
+        //     );
 
-            wp_send_json( $response );
-        }
+        //     wp_send_json( $response );
+        // }
 
         /**
          * Handles migrating the update

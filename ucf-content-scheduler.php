@@ -20,6 +20,7 @@ include_once 'includes/ucf-scheduler-logger.php';
 include_once 'includes/ucf-scheduler-options.php';
 include_once 'includes/ucf-scheduler-statuses.php';
 include_once 'includes/class-ucf-schedule.php';
+include_once 'admin/ucf-scheduler-messages.php';
 include_once 'admin/ucf-scheduler-admin.php';
 include_once 'admin/ucf-scheduler-metaboxes.php';
 include_once 'admin/ucf-scheduler-ajax.php';
@@ -75,6 +76,8 @@ if ( ! function_exists( 'ucf_scheduler_init' ) ) {
 		add_action( 'admin_init', array( 'UCF_Scheduler_Options', 'settings_init' ) );
 		// Add the options page.
 		add_action( 'admin_menu', array( 'UCF_Scheduler_Options', 'add_options_page' ) );
+		// Add admin notices.
+		add_action( 'admin_notices', array( 'UCF_Scheduler_Messages', 'admin_notices' ) );
 		// Add `scheduled` post_status
 		add_action( 'init', array( 'UCF_Scheduler_Statuses', 'register_scheduled_post_status' ), 10, 0 );
 		// Remove `update_scheduled` from `All` list
@@ -82,11 +85,12 @@ if ( ! function_exists( 'ucf_scheduler_init' ) ) {
 		// Add admin scripts
 		add_action( 'admin_enqueue_scripts', array( 'UCF_Scheduler_Admin', 'enqueue_admin_assets' ), 10, 0 );
 		// Add `Schedule` publish action button
-		add_action( 'add_meta_boxes', array( 'UCF_Scheduler_Metaboxes', 'add_schedule_metabox' ), 10, 0 );
+		add_action( 'post_submitbox_misc_actions', array( 'UCF_Scheduler_Metaboxes', 'schedule_metabox_markup' ), 10, 0 );
+		// Add logic for saving metabox data.
+		add_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ), 10, 1 );
 		// Add `schedule` admin action
 		add_action( 'wp_ajax_create_update', array( 'UCF_Scheduler_Ajax', 'create_update_admin_action' ), 10, 0 );
-		// Add `update_schedule` admin action
-		add_action( 'wp_ajax_update_schedule', array( 'UCF_Scheduler_Ajax', 'update_schedule_admin_action' ), 10, 0 );
+		// add_action( 'wp_ajax_update_schedule', array( 'UCF_Scheduler_Ajax', 'update_schedule_admin_action' ), 10, 0 );
 		// Add `update_original` admin action
 		add_action( 'wp_ajax_update_now', array( 'UCF_Scheduler_Ajax', 'update_original_admin_action' ), 10, 0 );
 		// Prevent publish on scheduled posts
