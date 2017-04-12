@@ -49,8 +49,7 @@
 						<input type="date" id="ucf_scheduler_end_date" name="ucf_scheduler_end_date" value="<?php echo $end_date ? $end_date : ''; ?>">
 						<input type="time" id="ucf_scheduler_end_time" name="ucf_scheduler_end_time" value="<?php echo $end_time ? $end_time : ''; ?>">
 					</div>
-					<?php $display = ( $post->post_status === 'update_scheduled' ) ? 'inline-block' : 'none'; ?>
-					<button id="ucf_scheduler_update_now" type="button" class="submitscheduler scheduler button button-warning button-large pull-right" style="display: <?php echo $display; ?>; margin: 8px;">Publish Immediately</a>
+					<button id="ucf_scheduler_update_now" type="button" class="submitscheduler scheduler button button-warning button-large pull-right" style="margin: 8px;">Publish Immediately</a>
 				</fieldset>
 			</div>
         <?php else : ?>
