@@ -28,7 +28,7 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
                     'You must provide a valid post_id'
                 );
             } else {
-                if ( $post['post_status'] === 'pending_scheduled'
+                if ( $post['post_status'] === 'update_unscheduled'
                   || $post['post_status'] === 'update_scheduled' ) {
 
                     $this->shadow = $post;
@@ -99,7 +99,7 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
             unset( $this->original['ID'] );
 			unset( $this->origina['guid'] );
             $this->original['post_parent'] = $original_id;
-            $this->original['post_status'] = 'pending_scheduled';
+            $this->original['post_status'] = 'update_unscheduled';
 
             $retval = wp_insert_post( $this->original );
 			$this->shadow = get_post( $retval, ARRAY_A );
@@ -156,7 +156,7 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 			if ( $this->shadow['post_status'] === 'update_scheduled' ) {
 				delete_post_meta( $this->shadow['ID'], 'ucf_scheduler_start_datetime' );
 				delete_post_meta( $this->shadow['ID'], 'ucf_scheduler_end_datetime' );
-				$this->shadow['post_status'] = 'pending_scheduled';
+				$this->shadow['post_status'] = 'update_unscheduled';
 				$retval = wp_update_post( $this->shadow );
 			}
 

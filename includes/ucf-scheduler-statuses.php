@@ -12,14 +12,14 @@ if ( ! class_exists( 'UCF_Scheduler' ) ) {
 		 * @since 1.0.0
 		 **/
 		public static function register_scheduled_post_status() {
-			register_post_status( 'pending_scheduled', array(
-				'label'                     => _x( 'Pending Update Schedule', 'post' ),
+			register_post_status( 'update_unscheduled', array(
+				'label'                     => _x( 'Update Unschedule', 'post' ),
 				'public'                    => false,
 				'internal'                  => true,
 				'private'                   => true,
 				'exclude_from_search'       => true,
 				'show_in_admin_status_list' => true,
-				'label_count'               => _n_noop( 'Updates Pending Scheduling <span class="count">(%s)</span>', 'Updates Pending Scheduling <span class="count">(%s)</span>' )
+				'label_count'               => _n_noop( 'Unscheduled Update <span class="count">(%s)</span>', 'Unscheduled Updates <span class="count">(%s)</span>' )
 			) );
 
 			register_post_status( 'update_scheduled', array(
@@ -29,7 +29,7 @@ if ( ! class_exists( 'UCF_Scheduler' ) ) {
 				'private'                   => true,
 				'exclude_from_search'       => true,
 				'show_in_admin_status_list' => true,
-				'label_count'               => _n_noop( 'Update Scheduled <span class="count">(%s)</span>', 'Update Scheduled <span class="count">(%s)</span>' )
+				'label_count'               => _n_noop( 'Scheduled Update <span class="count">(%s)</span>', 'Scheduled Updates <span class="count">(%s)</span>' )
 			) );
 		}
 	}
