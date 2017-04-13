@@ -30,7 +30,7 @@
             }
 
             $scheduled_statuses = array(
-                'pending_scheduled',
+                'update_unscheduled',
                 'update_scheduled'
             );
 

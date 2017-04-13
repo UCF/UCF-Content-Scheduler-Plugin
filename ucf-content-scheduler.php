@@ -98,6 +98,15 @@ if ( ! function_exists( 'ucf_scheduler_init' ) ) {
 		add_action( 'init', array( 'UCF_Scheduler_Cron', 'add_cron' ), 10, 0 );
 		// The action the cron initiates
 		add_action( 'ucf_scheduler_cron', array( 'UCF_Scheduler_Cron', 'init' ), 10, 0 );
+
+		$post_types = UCF_Scheduler_Options::get_option_or_default( 'enabled_post_types' );
+
+		foreach( $post_types as $name => $val ) {
+			if ( $val === 'on' ) {
+				add_filter( 'manage_' . $name . '_posts_columns', array( 'UCF_Scheduler_Admin', 'manage_columns' ), 10, 1 );
+				add_filter( 'manage_' . $name . '_posts_custom_column', array( 'UCF_Scheduler_Admin', 'manage_posts_custom_column' ), 10, 2 );
+			}
+		}
 	}
 
 	add_action( 'plugins_loaded', 'ucf_scheduler_init', 10, 0 );

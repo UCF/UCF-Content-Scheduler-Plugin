@@ -36,7 +36,7 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 					$where .= $wpdb->prepare(
 						" AND {$wpdb->posts}.post_status NOT IN ( '%s', '%s' ) ",
 						'update_scheduled',
-						'pending_scheduled'
+						'update_unscheduled'
 					);
 				 }
 
@@ -55,7 +55,7 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 		 **/
 		public static function prevent_publish( $new_status, $old_status, $post ) {
 			$statuses = array(
-				'pending_scheduled',
+				'update_unscheduled',
 				'update_scheduled'
 			);
 
@@ -63,13 +63,71 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 				return;
 			}
 
-			if ( $old_status === 'pending_scheduled' && $new_status === 'update_scheduled' ) {
+			if ( $old_status === 'update_unscheduled' && $new_status === 'update_scheduled' ) {
 				$post->post_status = $new_status;
 			} else if ( in_array( $old_status, $statuses ) && 'publish' === $new_status ) {
 				remove_action( 'post_save', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ) );
 				$post->post_status = $old_status;
 				wp_update_post( $post, true );
 				add_action( 'post_save', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ), 10, 1 );
+			}
+		}
+
+		/**
+		 * Function that adds the `ucf_scheduler_release` column.
+		 *
+		 * @author Jim Barnes
+		 * @since 1.0.0
+		 * 
+		 * @param $columns Array | Array of available columns
+		 * 
+		 * @return Array | The modified array of columns.
+		 **/
+		public static function manage_columns( $columns ) {
+			$post_status = isset( $_GET['post_status'] ) ? $_GET['post_status'] : null;
+
+			$statuses = array(
+				'update_unscheduled',
+				'update_scheduled'
+			);
+
+			if ( ! ( $post_status && in_array( $post_status, $statuses ) ) ) {
+				return $columns;
+			}
+
+			$new = array();
+
+			foreach( $columns as $key => $val ) {
+				$new[$key] = $val;
+
+				if ( 'title' === $key ) {
+					$new['ucf_scheduler_release'] = __( 'Release Date', 'ucf_scheduler' );
+				}
+			}
+
+			var_dump( $new );
+
+			return $new;
+		}
+
+		/**
+		 * Function that adds additional meta to the columns in wp-admin.
+		 *
+		 * @author Jim Barnes
+		 * @since 1.0.0
+		 * 
+		 * @param $column string | The name of the column
+		 * @param $post_id int | The post_id
+		 **/
+		public static function manage_posts_custom_column( $column, $post_id ) {
+			if ( 'ucf_scheduler_release' === $column ) {
+				$start_datetime = get_post_meta( $post_id, 'ucf_scheduler_start_datetime', true );
+
+				if ( $start_datetime ) {
+					$date = new DateTime( $start_datetime );
+					$retval = $date->format( 'D, M j, Y - g:i a' );
+					echo $retval;
+				}
 			}
 		}
     }
