@@ -101,11 +101,10 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 				$new[$key] = $val;
 
 				if ( 'title' === $key ) {
+					$new['ucf_scheduler_title'] = __( 'Update Title', 'ucf_scheduler' );
 					$new['ucf_scheduler_release'] = __( 'Release Date', 'ucf_scheduler' );
 				}
 			}
-
-			var_dump( $new );
 
 			return $new;
 		}
@@ -120,13 +119,15 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 		 * @param $post_id int | The post_id
 		 **/
 		public static function manage_posts_custom_column( $column, $post_id ) {
-			if ( 'ucf_scheduler_release' === $column ) {
-				$start_datetime = get_post_meta( $post_id, 'ucf_scheduler_start_datetime', true );
+			$schedule = new UCF_Schedule( $post_id );
 
-				if ( $start_datetime ) {
-					$date = new DateTime( $start_datetime );
-					$retval = $date->format( 'D, M j, Y - g:i a' );
-					echo $retval;
+			if ( 'ucf_scheduler_title' === $column ) {
+				echo $schedule->update_title;
+			}
+
+			if ( 'ucf_scheduler_release' === $column ) {
+				if ( $schedule->start_datetime ) {
+					echo $schedule->start_datetime->format( 'D, M j, Y - g:i a' );
 				}
 			}
 		}

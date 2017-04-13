@@ -14,6 +14,7 @@
 			global $post;
 			wp_nonce_field( 'ucf_scheduler_metabox', 'ucf_scheduler_metabox_nonce' );
 			
+			$title = get_post_meta( $post->ID, 'ucf_scheduler_update_title', true );
             $start = get_post_meta( $post->ID, 'ucf_scheduler_start_datetime', true );
             $end = get_post_meta( $post->ID, 'ucf_scheduler_end_datetime', true );
 
@@ -39,6 +40,10 @@
 			<style> #duplicate-action, #delete-action, #minor-publishing-actions, #preview-action, .misc-pub-post-status, .misc-pub-visibility, .misc-pub-curtime {display:none;} </style>
 			<div class="misc-pub-section ucf-scheduler-options">
 				<fieldset>
+					<div>
+						<label for="ucf_scheduler_title">Update Title</label><br>
+						<input type="text" id="ucf_scheduler_update_title" name="ucf_scheduler_update_title" value="<?php echo $title; ?>">
+					</div>
 					<div>
 						<label for="ucf_scheduler_start_date">Start Date and Time: </label>
 						<input type="date" id="ucf_scheduler_start_date" name="ucf_scheduler_start_date" value="<?php echo $start_date ? $start_date : ''; ?>">
@@ -77,12 +82,16 @@
 				$schedule_array['start_time'] = $start_time;
 			}
 
-			if ( isset( $postdata['ucf_scheduler_end_date'] ) && ( ! empty( $postdata['ucf_scheduler_end_date'] ) )) {
+			if ( isset( $postdata['ucf_scheduler_end_date'] ) && ( ! empty( $postdata['ucf_scheduler_end_date'] ) ) ) {
 				$end_date = sanitize_text_field( $postdata['ucf_scheduler_end_date'] );
 				$end_time = isset( $postdata['ucf_scheduler_end_time'] ) ? sanitize_text_field( $postdata['ucf_scheduler_end_time'] ) : '00:00';
 
 				$schedule_array['end_date'] = $end_date;
 				$schedule_array['end_time'] = $end_time;
+			}
+
+			if ( isset( $postdata['ucf_scheduler_update_title'] ) && ( ! empty( $postdata['ucf_scheduler_update_title'] ) ) ) {
+				update_post_meta( $post_id, 'ucf_scheduler_update_title', sanitize_text_field( $postdata['ucf_scheduler_update_title'] ) );
 			}
 
 			if ( ! empty( $schedule_array ) ) {

@@ -7,6 +7,7 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
         public
             $original,
             $shadow,
+			$update_title,
 			$start_datetime,
 			$end_datetime,
 			$current_status;
@@ -34,6 +35,8 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
                     $this->shadow = $post;
                     $original_id = $post['post_parent'];
                     $this->original = get_post( $original_id, ARRAY_A );
+
+					$this->update_title = get_post_meta( $this->shadow['ID'], 'ucf_scheduler_update_title', True );
 
 					$start_datetime = get_post_meta( $this->shadow['ID'], 'ucf_scheduler_start_datetime', True );
 					$end_datetime = get_post_meta( $this->shadow['ID'], 'ucf_scheduler_end_datetime', True );
