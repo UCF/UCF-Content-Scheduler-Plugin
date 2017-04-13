@@ -65,7 +65,7 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 		 * 
 		 * @return bool | True if the update is scheduled.
 		 **/
-		private function is_scheduled() {
+		public function is_scheduled() {
 			if ( $this->start_datetime ) {
 				return true;
 			}
@@ -81,7 +81,7 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 		 * 
 		 * return bool | True is the update is permanent.
 		 **/
-		private function is_permanent() {
+		public function is_permanent() {
 			if ( ! $this->end_datetime ) {
 				return true;
 			}
@@ -108,6 +108,7 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 			$this->shadow = get_post( $retval, ARRAY_A );
 
             $metadata = $this->format_metadata( $original_id );
+			$metadata['ucf_scheduler_update_title'] = $this->original['post_title'] . ' Update';
             $this->update_metadata( $retval, $metadata );
 
             return $retval;

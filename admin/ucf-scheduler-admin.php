@@ -103,6 +103,7 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 				if ( 'title' === $key ) {
 					$new['ucf_scheduler_title'] = __( 'Update Title', 'ucf_scheduler' );
 					$new['ucf_scheduler_release'] = __( 'Release Date', 'ucf_scheduler' );
+					$new['ucf_scheduler_type'] = __( 'Update Type', 'ucf_scheduler' );
 				}
 			}
 
@@ -128,6 +129,14 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 			if ( 'ucf_scheduler_release' === $column ) {
 				if ( $schedule->start_datetime ) {
 					echo $schedule->start_datetime->format( 'D, M j, Y - g:i a' );
+				}
+			}
+
+			if ( 'ucf_scheduler_type' === $column ) {
+				if ( $schedule->is_permanent() ) {
+					echo 'Permament Update';
+				} else {
+					echo 'Temporary Update';
 				}
 			}
 		}
