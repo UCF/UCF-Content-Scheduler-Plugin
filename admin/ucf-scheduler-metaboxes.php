@@ -89,9 +89,6 @@
 				remove_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ) );
 				$schedule = new UCF_Schedule( $post_id );
 				$scheduled = $schedule->update_schedule( $schedule_array );
-				if ( is_wp_error( $scheduled ) ) {
-					add_filter( 'redirect_post_location', array( 'UCF_Scheduler_Messages', 'add_notice' ), 99 );
-				}
 				add_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ), 10, 1 );
 			} else {
 				remove_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ) );

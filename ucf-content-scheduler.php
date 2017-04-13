@@ -90,7 +90,6 @@ if ( ! function_exists( 'ucf_scheduler_init' ) ) {
 		add_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ), 10, 1 );
 		// Add `schedule` admin action
 		add_action( 'wp_ajax_create_update', array( 'UCF_Scheduler_Ajax', 'create_update_admin_action' ), 10, 0 );
-		// add_action( 'wp_ajax_update_schedule', array( 'UCF_Scheduler_Ajax', 'update_schedule_admin_action' ), 10, 0 );
 		// Add `update_original` admin action
 		add_action( 'wp_ajax_update_now', array( 'UCF_Scheduler_Ajax', 'update_original_admin_action' ), 10, 0 );
 		// Prevent publish on scheduled posts

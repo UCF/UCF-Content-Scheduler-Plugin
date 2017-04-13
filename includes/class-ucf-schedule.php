@@ -6,7 +6,10 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
     class UCF_Schedule {
         public
             $original,
-            $shadow;
+            $shadow,
+			$start_datetime,
+			$end_datetime,
+			$current_status;
 
         /**
          * Created the UCF_Schedule Object
@@ -31,11 +34,57 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
                     $this->shadow = $post;
                     $original_id = $post['post_parent'];
                     $this->original = get_post( $original_id, ARRAY_A );
+
+					$start_datetime = get_post_meta( $this->shadow['ID'], 'ucf_scheduler_start_datetime', True );
+					$end_datetime = get_post_meta( $this->shadow['ID'], 'ucf_scheduler_end_datetime', True );
+
+					if ( $start_datetime ) {
+						$this->start_datetime = new DateTime( $start_datetime );
+					}
+
+					if ( $end_datetime ) {
+						$this->end_datetime = new DateTime( $end_datetime );
+					}
+
+					$this->current_status = $this->shadow['post_status'];
+
                 } else {
                     $this->original = $post;
                 }
             }
         }
+
+		/**
+		 * Determines if the update is scheduled.
+		 *
+		 * @author Jim Barnes
+		 * @since 1.0.0
+		 * 
+		 * @return bool | True if the update is scheduled.
+		 **/
+		private function is_scheduled() {
+			if ( $this->start_datetime ) {
+				return true;
+			}
+
+			return false;
+		}
+
+		/**
+		 * Determines if the update is permanent.
+		 * 
+		 * @author Jim Barnes
+		 * @since 1.0.0
+		 * 
+		 * return bool | True is the update is permanent.
+		 **/
+		private function is_permanent() {
+			if ( ! $this->end_datetime ) {
+				return true;
+			}
+
+			return false;
+		}
 
         /**
          * Creates the shadow copy of the original post.
@@ -48,13 +97,15 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
         public function create_shadow_post() {
             $original_id = $this->original['ID'];
             unset( $this->original['ID'] );
+			unset( $this->origina['guid'] );
             $this->original['post_parent'] = $original_id;
             $this->original['post_status'] = 'pending_scheduled';
 
             $retval = wp_insert_post( $this->original );
+			$this->shadow = get_post( $retval, ARRAY_A );
 
             $metadata = $this->format_metadata( $original_id );
-            $this->update_metadata( $original_id, $metadata );
+            $this->update_metadata( $retval, $metadata );
 
             return $retval;
         }
@@ -68,13 +119,21 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
          * @param $schedule Array | An array of the start and end dates and times
 		 * @return int|WP_Error | Returns $post_id if update was successful, WP_Error if not.
          **/
-        public function update_schedule( $schedule ) {
-            $metadata = $this->format_schedule( $schedule );
+        public function update_schedule( $schedule, $format=true, $verify=true ) {
+			// Format the schedule if $format is true
+			$metadata = $format ? $this->format_schedule( $schedule ) : $schedule;
 
-			if ( $this->verify_unique_schedule( $metadata ) ) {
+			if ( $this->verify_unique_schedule( $metadata ) || $verify === false ) {
 				$this->update_metadata( $this->shadow['ID'], $metadata );
-				$this->shadow['post_status'] = 'update_scheduled';
-				$retval = wp_update_post( $this->shadow );
+				if ( ! $this->is_scheduled() ) {
+					if ( isset( $this->shadow['ID'] ) ){
+						$update_object = array(
+							'ID' => $this->shadow['ID'],
+							'post_status' => 'update_scheduled'
+						);
+						$retval = wp_update_post( $update_object );
+					}
+				}
 			} else {
 				$retval = new WP_Error(
 					"not-unique-schedule",
@@ -117,19 +176,17 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 			$shadow_id = $this->shadow['ID'];
 			$original = $this->original;
 
-			$end_date = get_post_meta( $shadow_id, 'ucf_scheduler_end_datetime', True );
-
-			if ( $end_date ) {
-				$end_date = new DateTime( $end_date );
-				$original['post_parent'] = $retval;
-				$schedule = new UCF_Schedule( $original );
+			if ( ! $this->is_permanent() ) {
+				$schedule = new UCF_Schedule( $original['ID'] );
 				$schedule->create_shadow_post();
-				$start_date = array(
-					'start_date' => $end_date->format( 'Y-m-d' ),
-					'start_time' => $end_date->format( 'H:i:s' )
+
+				$sch_array = array(
+					'ucf_scheduler_start_datetime' => $this->end_datetime->format( 'Y-m-d H:i:s' ),
+					'ucf_scheduler_end_datetime' => null
 				);
 
-				$schedule->update_schedule( $start_date );
+				// Update the schedule, without formatting or verifying.
+				$schedule->update_schedule( $sch_array, false, false );
 			}
 
             $this->shadow['ID'] = $this->original['ID'];
@@ -139,9 +196,7 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 
             $retval = wp_update_post( $this->shadow );
 
-			if ( ! $end_date ) {
-				wp_delete_post( $shadow_id );
-			}
+			wp_delete_post( $shadow_id , true );
 
             return $retval;
         }
@@ -237,13 +292,13 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 					array(
 						'key'     => 'ucf_scheduler_start_datetime',
 						'value'   => $schedule['ucf_scheduler_start_datetime'],
-						'compare' => '<=',
+						'compare' => '<',
 						'type'    => 'DATETIME'
 					),
 					array(
 						'key'     => 'ucf_scheduler_end_datetime',
 						'value'   => $schedule['ucf_scheduler_end_datetime'],
-						'compare' => '>=',
+						'compare' => '>',
 						'type'    => 'DATETIME'
 					)
 				)

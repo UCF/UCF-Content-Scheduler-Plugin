@@ -66,8 +66,10 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 			if ( $old_status === 'pending_scheduled' && $new_status === 'update_scheduled' ) {
 				$post->post_status = $new_status;
 			} else if ( in_array( $old_status, $statuses ) && 'publish' === $new_status ) {
+				remove_action( 'post_save', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ) );
 				$post->post_status = $old_status;
-				$post_id = wp_update_post( $post, false );
+				wp_update_post( $post, true );
+				add_action( 'post_save', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ), 10, 1 );
 			}
 		}
     }
