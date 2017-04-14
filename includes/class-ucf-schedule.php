@@ -97,12 +97,12 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
          *
          * @return int | The ID of the new post.
          **/
-        public function create_shadow_post() {
+        public function create_shadow_post( $post_status='' ) {
             $original_id = $this->original['ID'];
             unset( $this->original['ID'] );
-			unset( $this->origina['guid'] );
+			unset( $this->original['guid'] );
             $this->original['post_parent'] = $original_id;
-            $this->original['post_status'] = 'update_unscheduled';
+            $this->original['post_status'] = ( ! empty( $post_status ) ) ? $post_status : 'update_unscheduled';
 
             $retval = wp_insert_post( $this->original );
 			$this->shadow = get_post( $retval, ARRAY_A );
@@ -128,21 +128,10 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 			$metadata = $format ? $this->format_schedule( $schedule ) : $schedule;
 
 			if ( $this->verify_unique_schedule( $metadata ) || $verify === false ) {
+				$retval = 'update_scheduled';
 				$this->update_metadata( $this->shadow['ID'], $metadata );
-				if ( ! $this->is_scheduled() ) {
-					if ( isset( $this->shadow['ID'] ) ){
-						$update_object = array(
-							'ID' => $this->shadow['ID'],
-							'post_status' => 'update_scheduled'
-						);
-						$retval = wp_update_post( $update_object );
-					}
-				}
 			} else {
-				$retval = new WP_Error(
-					"not-unique-schedule",
-					__( 'The provided schedule overlaps with an already scheduled update for this post.', 'ucf_scheduler' )
-				);
+				$retval = 'update_unscheduled';
 			}
 
 			return $retval;
@@ -160,8 +149,6 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 			if ( $this->shadow['post_status'] === 'update_scheduled' ) {
 				delete_post_meta( $this->shadow['ID'], 'ucf_scheduler_start_datetime' );
 				delete_post_meta( $this->shadow['ID'], 'ucf_scheduler_end_datetime' );
-				$this->shadow['post_status'] = 'update_unscheduled';
-				$retval = wp_update_post( $this->shadow );
 			}
 
 			return $retval;
@@ -176,13 +163,13 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
          * @param $delete_update bool | If true, will delete the shadow post
          * @return int | The ID of the original post.
          **/
-        public function update_original_post( $delete_update=False ) {
+        public function update_original_post() {
 			$shadow_id = $this->shadow['ID'];
 			$original = $this->original;
 
 			if ( ! $this->is_permanent() ) {
 				$schedule = new UCF_Schedule( $original['ID'] );
-				$schedule->create_shadow_post();
+				$schedule->create_shadow_post( 'update_scheduled' );
 
 				$sch_array = array(
 					'ucf_scheduler_start_datetime' => $this->end_datetime->format( 'Y-m-d H:i:s' ),

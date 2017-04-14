@@ -65,46 +65,54 @@
 		<?php
 		}
 
-		public static function save_meta_box( $post_id ) {
-			$postdata = $_POST;
+		/**
+		 * Saves post meta
+		 * @author Jim Barnes
+		 * @since 1.0.0
+		 * 
+		 * @param $postarr Array | The post array
+		 * @return string|null | The post_status or null if nonce isn't set.
+		 **/
+		public static function save_meta_box( $postarr ) {
+			$post_id = $postarr['ID'];
+			$retval = null;
 
-			if ( ! wp_verify_nonce( $postdata['ucf_scheduler_metabox_nonce'], 'ucf_scheduler_metabox' ) ) {
-				return;
+			if ( ! wp_verify_nonce( $postarr['ucf_scheduler_metabox_nonce'], 'ucf_scheduler_metabox' ) ) {
+				return null;
 			}
 
 			$schedule_array = array();
 
-			if ( isset( $postdata['ucf_scheduler_start_date'] ) && ( ! empty( $postdata['ucf_scheduler_start_date'] ) ) ) {
-				$start_date = sanitize_text_field( $postdata['ucf_scheduler_start_date'] );
-				$start_time = isset( $postdata['ucf_scheduler_start_time'] ) ? sanitize_text_field( $postdata['ucf_scheduler_start_time'] ) : '00:00';
+			if ( isset( $postarr['ucf_scheduler_start_date'] ) && ( ! empty( $postarr['ucf_scheduler_start_date'] ) ) ) {
+				$start_date = sanitize_text_field( $postarr['ucf_scheduler_start_date'] );
+				$start_time = isset( $postarr['ucf_scheduler_start_time'] ) ? sanitize_text_field( $postarr['ucf_scheduler_start_time'] ) : '00:00';
 
 				$schedule_array['start_date'] = $start_date;
 				$schedule_array['start_time'] = $start_time;
 			}
 
-			if ( isset( $postdata['ucf_scheduler_end_date'] ) && ( ! empty( $postdata['ucf_scheduler_end_date'] ) ) ) {
-				$end_date = sanitize_text_field( $postdata['ucf_scheduler_end_date'] );
-				$end_time = isset( $postdata['ucf_scheduler_end_time'] ) ? sanitize_text_field( $postdata['ucf_scheduler_end_time'] ) : '00:00';
+			if ( isset( $postarr['ucf_scheduler_end_date'] ) && ( ! empty( $postarr['ucf_scheduler_end_date'] ) ) ) {
+				$end_date = sanitize_text_field( $postarr['ucf_scheduler_end_date'] );
+				$end_time = isset( $postarr['ucf_scheduler_end_time'] ) ? sanitize_text_field( $postarr['ucf_scheduler_end_time'] ) : '00:00';
 
 				$schedule_array['end_date'] = $end_date;
 				$schedule_array['end_time'] = $end_time;
 			}
 
-			if ( isset( $postdata['ucf_scheduler_update_title'] ) && ( ! empty( $postdata['ucf_scheduler_update_title'] ) ) ) {
-				update_post_meta( $post_id, 'ucf_scheduler_update_title', sanitize_text_field( $postdata['ucf_scheduler_update_title'] ) );
+			if ( isset( $postarr['ucf_scheduler_update_title'] ) && ( ! empty( $postarr['ucf_scheduler_update_title'] ) ) ) {
+				update_post_meta( $post_id, 'ucf_scheduler_update_title', sanitize_text_field( $postarr['ucf_scheduler_update_title'] ) );
 			}
 
 			if ( ! empty( $schedule_array ) ) {
-				remove_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ) );
 				$schedule = new UCF_Schedule( $post_id );
-				$scheduled = $schedule->update_schedule( $schedule_array );
-				add_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ), 10, 1 );
+				$retval = $schedule->update_schedule( $schedule_array );
 			} else {
-				remove_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ) );
 				$schedule = new UCF_Schedule( $post_id );
 				$schedule->remove_schedule();
-				add_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ), 10, 1 );
+				$retval = 'update_unscheduled';
 			}
+
+			return $retval;
 		}
      }
  }

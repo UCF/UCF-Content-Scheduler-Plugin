@@ -15,6 +15,7 @@ define( 'UCF_SCHEDULER__PLUGIN_FILE', __FILE__ );
 define( 'UCF_SCHEDULER__PLUGIN_URL', plugins_url( basename( dirname( __FILE__ ) ) ) );
 define( 'UCF_SCHEDULER__STATIC_URL', UCF_SCHEDULER__PLUGIN_URL . '/static' );
 define( 'UCF_SCHEDULER__SCRIPT_URL', UCF_SCHEDULER__STATIC_URL . '/js' );
+define( 'UCF_SCHEDULER__STATUSES', serialize( array( 'update_unscheduled', 'update_scheduled' ) ) );
 
 include_once 'includes/ucf-scheduler-logger.php';
 include_once 'includes/ucf-scheduler-options.php';
@@ -87,13 +88,14 @@ if ( ! function_exists( 'ucf_scheduler_init' ) ) {
 		// Add `Schedule` publish action button
 		add_action( 'post_submitbox_misc_actions', array( 'UCF_Scheduler_Metaboxes', 'schedule_metabox_markup' ), 10, 0 );
 		// Add logic for saving metabox data.
-		add_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ), 10, 1 );
+		// add_action( 'save_post', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ), 10, 1 );
 		// Add `schedule` admin action
 		add_action( 'wp_ajax_create_update', array( 'UCF_Scheduler_Ajax', 'create_update_admin_action' ), 10, 0 );
 		// Add `update_original` admin action
 		add_action( 'wp_ajax_update_now', array( 'UCF_Scheduler_Ajax', 'update_original_admin_action' ), 10, 0 );
 		// Prevent publish on scheduled posts
-		add_action( 'transition_post_status', array( 'UCF_Scheduler_Admin', 'prevent_publish' ), 10, 3 );
+		// add_action( 'transition_post_status', array( 'UCF_Scheduler_Admin', 'prevent_publish' ), 10, 3 );
+		add_action( 'wp_insert_post_data', array( 'UCF_Scheduler_Admin', 'status_workflow' ), 10, 2 );
 		// Adds the cron if it does not exist.
 		add_action( 'init', array( 'UCF_Scheduler_Cron', 'add_cron' ), 10, 0 );
 		// The action the cron initiates

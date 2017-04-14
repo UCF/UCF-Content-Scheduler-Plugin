@@ -57,7 +57,7 @@ var updateLabels = function($) {
       post_status = $post_status.val(),
       $publishBtn = $('#publish');
 
-  if (post_status === 'pending_scheduled' || post_status === 'update_scheduled') {
+  if (post_status === 'update_unscheduled' || post_status === 'update_scheduled') {
     $publishBtn.val('Update');
   }
 };

@@ -46,31 +46,33 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 		/**
 		 * Hook that supports workflow by preventing scheduled
 		 * posts from being published outside of the cron job.
+		 * Ref: 
 		 * @author Jim Barnes
 		 * @since 1.0.0
 		 * 
-		 * @param $new_status string | The new status of the post
-		 * @param $old_status string | The old status of the post
-		 * @param $post WP_Post object | The post object.
+		 * @param $data Array | An array of slashed post data
+		 * @param $postarr Array | An array of sanitized, but otherwise unmodified post data
 		 **/
-		public static function prevent_publish( $new_status, $old_status, $post ) {
-			$statuses = array(
-				'update_unscheduled',
-				'update_scheduled'
-			);
+		public static function status_workflow( $data, $postarr ) {
+			
+			$statuses = unserialize( UCF_SCHEDULER__STATUSES );
+			$enabled_posttypes = array_keys( UCF_Scheduler_Options::get_option_or_default( 'enabled_post_types' ) );
 
-			if ( $new_status === $old_status && in_array( $new_status, $statuses ) ) {
-				return;
+			// Only follow this process if post type is enabled for publishing.
+			if ( in_array( $data['post_type'], $enabled_posttypes ) ) {
+				// Rules for existing posts
+				if ( isset( $postarr['original_post_status'] ) ) {
+					if ( in_array( $postarr['original_post_status'], $statuses ) ) {
+						$data['post_status'] = UCF_Scheduler_Metaboxes::save_meta_box( $postarr );
+					}
+
+					if ( 'publish' === $data['post_status'] && in_array( $postarr['original_post_status'], $statuses ) ) {
+						$data['post_status'] = $postarr['original_post_status'];
+					}
+				}
 			}
 
-			if ( $old_status === 'update_unscheduled' && $new_status === 'update_scheduled' ) {
-				$post->post_status = $new_status;
-			} else if ( in_array( $old_status, $statuses ) && 'publish' === $new_status ) {
-				remove_action( 'post_save', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ) );
-				$post->post_status = $old_status;
-				wp_update_post( $post, true );
-				add_action( 'post_save', array( 'UCF_Scheduler_Metaboxes', 'save_meta_box' ), 10, 1 );
-			}
+			return $data;
 		}
 
 		/**
