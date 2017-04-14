@@ -17,6 +17,7 @@ define( 'UCF_SCHEDULER__STATIC_URL', UCF_SCHEDULER__PLUGIN_URL . '/static' );
 define( 'UCF_SCHEDULER__SCRIPT_URL', UCF_SCHEDULER__STATIC_URL . '/js' );
 define( 'UCF_SCHEDULER__STATUSES', serialize( array( 'update_unscheduled', 'update_scheduled' ) ) );
 
+include_once 'includes/ucf-scheduler-utils.php';
 include_once 'includes/ucf-scheduler-logger.php';
 include_once 'includes/ucf-scheduler-options.php';
 include_once 'includes/ucf-scheduler-statuses.php';

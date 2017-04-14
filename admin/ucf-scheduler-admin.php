@@ -123,6 +123,7 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 		 **/
 		public static function manage_posts_custom_column( $column, $post_id ) {
 			$schedule = new UCF_Schedule( $post_id );
+			$tz = UCF_Scheduler_Util::get_timezone();
 
 			if ( 'ucf_scheduler_title' === $column ) {
 				echo $schedule->update_title;
@@ -130,7 +131,9 @@ if ( ! class_exists( 'UCF_Scheduler_Admin' ) ) {
 
 			if ( 'ucf_scheduler_release' === $column ) {
 				if ( $schedule->start_datetime ) {
-					echo $schedule->start_datetime->format( 'D, M j, Y - g:i a' );
+					$date = $schedule->start_datetime;
+					$date->setTimezone( $tz );
+					echo $date->format( 'D, M j, Y - g:i a' );
 				}
 			}
 

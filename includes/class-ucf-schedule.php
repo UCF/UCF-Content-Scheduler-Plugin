@@ -41,12 +41,14 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
 					$start_datetime = get_post_meta( $this->shadow['ID'], 'ucf_scheduler_start_datetime', True );
 					$end_datetime = get_post_meta( $this->shadow['ID'], 'ucf_scheduler_end_datetime', True );
 
+					$utc = new DateTimeZone( 'UTC' );
+
 					if ( $start_datetime ) {
-						$this->start_datetime = new DateTime( $start_datetime );
+						$this->start_datetime = new DateTime( $start_datetime, $utc );
 					}
 
 					if ( $end_datetime ) {
-						$this->end_datetime = new DateTime( $end_datetime );
+						$this->end_datetime = new DateTime( $end_datetime, $utc );
 					}
 
 					$this->current_status = $this->shadow['post_status'];
@@ -202,10 +204,15 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
          * @return Array | Returns a start and end DateTime object (or null if start of end is not provided)
          **/
         private function format_schedule( $schedule ) {
+			$tz = UCF_Scheduler_Util::get_timezone();
+			$utc = new DateTimeZone( 'UTC' );
+
             $start_date = $schedule['start_date'];
             $start_time = isset( $schedule['start_time'] ) ? $schedule['start_time'] : '00:00';
 
-			$start_date_time = new DateTime( $start_date . ' ' . $start_time );
+			// Create date with current timezone.
+			$start_date_time = new DateTime( $start_date . ' ' . $start_time, $tz );
+			$start_date_time->setTimezone( $utc );
 
             $end_date = isset( $schedule['end_date'] ) ? $schedule['end_date'] : null;
             $end_time = isset( $schedule['end_time'] ) ? $schedule['end_time'] : '00:00';
@@ -215,7 +222,8 @@ if ( ! class_exists( 'UCF_Schedule' ) ) {
             );
 
             if ( $end_date ) {
-				$end_date_time = new DateTime( $end_date . ' ' . $end_time );
+				$end_date_time = new DateTime( $end_date . ' ' . $end_time , $tz );
+				$end_date_time->setTimezone( $utc );
 
                 $retval['ucf_scheduler_end_datetime'] = $end_date_time->format( 'Y-m-d H:i:s' );
             } else {

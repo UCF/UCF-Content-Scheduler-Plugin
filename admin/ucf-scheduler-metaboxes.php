@@ -14,18 +14,23 @@
 			global $post;
 			wp_nonce_field( 'ucf_scheduler_metabox', 'ucf_scheduler_metabox_nonce' );
 			
+			$tz = UCF_Scheduler_Util::get_timezone();
+			$utc = new DateTimeZone( 'UTC' );
+
 			$title = get_post_meta( $post->ID, 'ucf_scheduler_update_title', true );
             $start = get_post_meta( $post->ID, 'ucf_scheduler_start_datetime', true );
             $end = get_post_meta( $post->ID, 'ucf_scheduler_end_datetime', true );
 
             if ( $start ) {
-				$start = new DateTime( $start );
+				$start = new DateTime( $start, $utc );
+				$start->setTimezone( $tz );
                 $start_date = $start->format( 'Y-m-d' );
                 $start_time = $start->format( 'H:i' );
             }
 
             if ( $end ) {
-				$end = new DateTime( $end );
+				$end = new DateTime( $end, $utc );
+				$end->setTimezone( $tz );
                 $end_date = $end->format( 'Y-m-d' );
                 $end_time = $end->format( 'H:i' );
             }

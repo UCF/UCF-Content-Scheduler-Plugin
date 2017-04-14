@@ -33,7 +33,7 @@ if ( ! class_exists( 'UCF_Scheduler_Cron' ) ) {
 		}
 
 		public static function check_for_updates() {
-			$today = date( 'Y-m-d H:i:s' );
+			$now = gmdate( 'Y-m-d H:i:s' );
 
 			$args = array(
 				'post_type'      => 'any',
@@ -42,7 +42,7 @@ if ( ! class_exists( 'UCF_Scheduler_Cron' ) ) {
 				'meta_query'     => array(
 					array(
 						'key'       => 'ucf_scheduler_start_datetime',
-						'value'     => $today,
+						'value'     => $now,
 						'compare'   => '<=',
 						'type'      => 'DATETIME'
 					)
