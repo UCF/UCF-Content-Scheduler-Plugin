@@ -34,3 +34,5 @@ if ( ! class_exists( 'UCF_Scheduler' ) ) {
 		}
 	}
 }
+
+?>

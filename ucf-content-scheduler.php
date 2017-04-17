@@ -112,3 +112,5 @@ if ( ! function_exists( 'ucf_scheduler_init' ) ) {
 
 	add_action( 'plugins_loaded', 'ucf_scheduler_init', 10, 0 );
 }
+
+?>
