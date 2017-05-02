@@ -13,11 +13,13 @@ if ( ! class_exists( 'UCF_Scheduler_Util' ) ) {
 				return new DateTimeZone( $timezone );
 			}
 
-			if ( 0 === ( $ucf_offset = get_option( 'gmt_offset', 0 ) ) ) {
+			if ( 0 === ( $utc_offset = get_option( 'gmt_offset', 0 ) ) ) {
 				return new DateTimeZone( 'UTC' );
 			}
 
-			if ( $timezone = timezone_name_from_abbr( '', 'utc_offset', 0 ) ) {
+			$utc_offset *= 3600;
+
+			if ( $timezone = timezone_name_from_abbr( '', $utc_offset, 0 ) ) {
 				return new DateTimeZone( $timezone );
 			}
 
