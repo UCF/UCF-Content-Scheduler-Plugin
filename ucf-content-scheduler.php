@@ -2,7 +2,7 @@
 /*
 Plugin Name: UCF Content Scheduler
 Description: Allows for the scheduling of content replacement.
-Version: 1.0.0
+Version: 0.1.0
 Author: Jim Barnes
 Tags: post, schedule
 License: GPL3

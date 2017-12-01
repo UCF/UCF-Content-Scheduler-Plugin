@@ -22,6 +22,9 @@ This plugin allows for pages and posts (and other configured post_types) to have
 
 ## Changelog ##
 
+### 0.1.0 ###
+* Initial pre-release
+
 
 ## Upgrade Notice ##
 
